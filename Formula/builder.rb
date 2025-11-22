@@ -1,31 +1,31 @@
 class Builder < Formula
   desc "High-performance build system for mixed-language monorepos"
   homepage "https://github.com/GriffinCanCode/Builder"
-  url "https://github.com/GriffinCanCode/Builder/archive/refs/tags/v1.0.5.tar.gz"
-  sha256 "a7899a2147c3a2ae52634821f7d82166b69b3e1bfbb081f038c7603d90f46041"
-  license "GRIFFIN"
+  url "https://github.com/GriffinCanCode/Builder/archive/refs/tags/v1.0.6.tar.gz"
+  sha256 "00be5a007a9b6b33c572e544426598cdf4c63c7dca875c9bdd2e1d6d7edfb7ad"
+  license "MIT"
   head "https://github.com/GriffinCanCode/Builder.git", branch: "master"
 
   depends_on "ldc" => :build
   depends_on "dub" => :build
 
   def install
-    # Compile C dependencies
-    system "mkdir", "-p", "bin/obj"
-    system ENV.cc, "-c", "-O3", "-fPIC", "source/utils/crypto/c/blake3.c", "-o", "bin/obj/blake3.o"
-    system ENV.cc, "-c", "-O3", "-fPIC", "source/utils/simd/c/cpu_detect.c", "-o", "bin/obj/cpu_detect.o"
-    system ENV.cc, "-c", "-O3", "-fPIC", "source/utils/simd/c/blake3_dispatch.c", "-o", "bin/obj/blake3_dispatch.o"
-    system ENV.cc, "-c", "-O3", "-fPIC", "source/utils/simd/c/simd_ops.c", "-o", "bin/obj/simd_ops.o"
+    # Build using Makefile which handles C dependencies
+    system "make", "build"
 
-    # Build with dub
-    system "dub", "build", "--build=release", "--compiler=ldc2"
-
-    # Install binary
+    # Install binaries
     bin.install "bin/builder"
+    
+    # Optionally install LSP server if built
+    bin.install "bin/builder-lsp" if File.exist?("bin/builder-lsp")
   end
 
   test do
-    # Test that the binary runs and shows version/help
+    # Test that the binary runs and shows correct version
+    assert_match "Builder version 1.0.6", shell_output("#{bin}/builder --version")
+    
+    # Test help command
     system "#{bin}/builder", "--help"
   end
 end
+
